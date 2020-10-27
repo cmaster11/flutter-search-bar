@@ -141,18 +141,13 @@ class SearchBar {
   ///
   AppBar buildSearchBar(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    Color buttonColor = inBar ? null : theme.iconTheme.color;
     TextStyle hintStyle = TextStyle(
       color: inBar
           ? theme.appBarTheme?.textTheme?.headline4?.color ?? theme.primaryTextTheme?.headline4?.color
           : theme.textTheme.headline4.color,
     );
     TextStyle inputStyle = inBar ? theme.appBarTheme?.textTheme?.subtitle1 ?? theme.primaryTextTheme?.subtitle1 : null;
-
-    // This is a bit of a hack, but follows the default initialization of disabled color in a material theme.
-    // If we're in the app bar, we want to invert the default disabled color, unless one is provided.
-    Color disabledColor = this.disabledColor ??
-        (inBar ? (theme.disabledColor == Colors.black38 ? Colors.white38 : Colors.black38) : theme.disabledColor);
+    Color buttonColor = inBar ? inputStyle?.color : theme.iconTheme.color;
 
     final actions = appBarActionsCallback?.call(context) ??
         <Widget>[
@@ -219,7 +214,13 @@ class SearchBar {
   /// and you want to display the default clear button
   IconButton getClearAction(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    Color buttonColor = inBar ? null : theme.iconTheme.color;
+    TextStyle inputStyle = inBar ? theme.appBarTheme?.textTheme?.subtitle1 ?? theme.primaryTextTheme?.subtitle1 : null;
+    Color buttonColor = inBar ? inputStyle?.color : theme.iconTheme.color;
+
+    // This is a bit of a hack, but follows the default initialization of disabled color in a material theme.
+    // If we're in the app bar, we want to invert the default disabled color, unless one is provided.
+    Color disabledColor = this.disabledColor ??
+        (inBar ? (theme.disabledColor == Colors.black38 ? Colors.white38 : Colors.black38) : theme.disabledColor);
 
     // Show an icon if clear is not active, so there's no ripple on tap
     return IconButton(
