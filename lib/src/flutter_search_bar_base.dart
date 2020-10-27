@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 
 typedef Widget AppBarCallback(BuildContext context);
+typedef List<Widget> AppBarActionsCallback(BuildContext context);
 typedef void TextFieldSubmitCallback(String value);
 typedef void TextFieldChangeCallback(String value);
 typedef void SetStateCallback(void fn());
@@ -49,6 +50,9 @@ class SearchBar {
   /// The color to use when the clear button is disabled
   final Color disabledColor;
 
+  /// A callback which should return a list of actions available in the app bar
+  final AppBarActionsCallback appBarActionsCallback;
+
   /// The controller to be used in the textField.
   TextEditingController controller;
 
@@ -72,6 +76,7 @@ class SearchBar {
     this.onClosed,
     this.onCleared,
     this.disabledColor,
+    this.appBarActionsCallback,
   }) {
     if (this.controller == null) {
       this.controller = TextEditingController();
@@ -149,6 +154,11 @@ class SearchBar {
     Color disabledColor = this.disabledColor ??
         (inBar ? (theme.disabledColor == Colors.black38 ? Colors.white38 : Colors.black38) : theme.disabledColor);
 
+    final actions = appBarActionsCallback?.call(context) ??
+        <Widget>[
+          if (showClearButton) getClearAction(context),
+        ];
+
     return AppBar(
       leading: IconButton(
           icon: const BackButtonIcon(),
@@ -188,21 +198,7 @@ class SearchBar {
           controller: controller,
         ),
       ),
-      actions: !showClearButton
-          ? null
-          : <Widget>[
-              // Show an icon if clear is not active, so there's no ripple on tap
-              IconButton(
-                  icon: Icon(Icons.clear),
-                  color: inBar ? null : buttonColor,
-                  disabledColor: disabledColor,
-                  onPressed: !_clearActive
-                      ? null
-                      : () {
-                          onCleared?.call();
-                          controller.clear();
-                        }),
-            ],
+      actions: actions,
     );
   }
 
@@ -215,6 +211,27 @@ class SearchBar {
         onPressed: () {
           beginSearch(context);
         });
+  }
+
+  /// Returns an [IconButton] to trigger the clear method
+  ///
+  /// Put this inside your [appBarActionsCallback] method, if you are using that callback
+  /// and you want to display the default clear button
+  IconButton getClearAction(BuildContext context) {
+    ThemeData theme = Theme.of(context);
+    Color buttonColor = inBar ? null : theme.iconTheme.color;
+
+    // Show an icon if clear is not active, so there's no ripple on tap
+    return IconButton(
+        icon: Icon(Icons.clear),
+        color: buttonColor,
+        disabledColor: disabledColor,
+        onPressed: !_clearActive
+            ? null
+            : () {
+                onCleared?.call();
+                controller.clear();
+              });
   }
 
   /// Returns an AppBar based on the value of [isSearching]
